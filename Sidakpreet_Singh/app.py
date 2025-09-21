@@ -30,8 +30,12 @@ def process_video(source_video_path, model):
 
     all_tracking_data = []
 
+    st.write("Starting video processing...")
+
     with sv.VideoSink(target_video_path, video_info) as sink:
         for frame_index, frame in enumerate(frame_generator):
+            if frame_index % 10 == 0:
+                st.write(f"Processed {frame_index} frames...")
             results = model(frame)[0]
             detections = sv.Detections.from_ultralytics(results)
             detections = tracker.update_with_detections(detections)
@@ -49,6 +53,8 @@ def process_video(source_video_path, model):
             annotated_frame = box_annotator.annotate(scene=frame.copy(), detections=detections)
             annotated_frame = label_annotator.annotate(scene=annotated_frame, detections=detections, labels=labels)
             sink.write_frame(frame=annotated_frame)
+
+    st.write("Finished processing all frames.")
 
     with open(results_json_path, 'w') as f:
         json.dump(all_tracking_data, f, indent=4)
