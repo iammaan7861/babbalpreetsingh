@@ -1,6 +1,6 @@
 
 \
-**Live Demo Link:** https://live-traffic-tracker.streamlit.app\
+**Live Demo Link:** https://live-traffic-tracker.streamlit.app
 \
 ---\
 \
