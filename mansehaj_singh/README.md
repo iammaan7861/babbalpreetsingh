@@ -20,3 +20,34 @@ The pipeline covers:
 ---
 
 ## 📂 Repository Structure
+
+mansehaj_singh/
+│── README.md # Project explanation
+│── YOLOv8_object_detection.ipynb # Google Colab Notebook (training + inference)
+│── Report.pdf # Documentation & report
+
+
+## 🚀 How to Run
+
+### 1️⃣ Clone the repository
+
+git clone https://github.com/mansehaj-singh/labeller_project.git
+cd labeller_project/mansehaj_singh
+
+##2️⃣ Open the Notebook
+
+Upload YOLOv8_object_detection.ipynb to Google Colab and run step by step.
+It covers:
+
+Installing dependencies
+
+Preparing dataset
+
+Training with YOLOv8
+
+Testing & inference
+
+
+---
+
+
