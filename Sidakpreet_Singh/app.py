@@ -16,7 +16,9 @@ st.title("YOLOv8 Object Tracking and Segmentation")
 st.write("Upload a video to see your custom-trained model track vehicles and pedestrians.")
 
 # --- Model and File Paths ---
-model_path = 'best.pt'
+# Build the absolute path to the model file
+model_path = os.path.join(os.path.dirname(__file__), 'best.pt')
+
 
 # --- Helper Function for Video Processing ---
 def process_video(source_video_path, model):
