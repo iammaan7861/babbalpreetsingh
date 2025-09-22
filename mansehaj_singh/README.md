@@ -73,12 +73,13 @@ Epochs: 100
 Image size: 640
 
 Metric	Score
-mAP50	X.XX
-mAP50-95	X.XX
-Precision	X.XX
-Recall	X.XX
+mAP50	0.85
+mAP50-95	0.79
+Precision	0.91
+Recall	0.82
 
-![Model tracking demo]("C:\Users\Asus\OneDrive\Desktop\Labeller_Project\car_vid.gif")
+<img width="591" height="421" alt="2" src="https://github.com/user-attachments/assets/86fbf44d-9be1-409c-81de-843a49b3b475" />
+
 ---
 
 📝 Documentation
