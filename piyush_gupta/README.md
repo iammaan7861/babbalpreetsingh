@@ -34,20 +34,21 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 3. **Validation Dataset:**
 
-   * Selected **53 images** for validation purposes.
+   * Selected **20 images** for validation purposes.
 
 4. **Model Training:**
 
-   * Trained a YOLO segmentation model on the **114 training images**.
+   * Trained a YOLO segmentation model on the **94 training images**.
 
 5. **Model Validation:**
 
-   * Validated the model on the **53 validation images**.
+   * Validated the model on the **20 validation images**.
 
 6. **Evaluation Metrics:**
 
-   * **Curve Placeholder:** `[PLACEHOLDER: Add training/validation curves here]`
-   * **Confusion Matrix Placeholder:** `[PLACEHOLDER: Add confusion matrix image here]`
+   * **Curve And Confusion Matrix**
+     <img width="1544" height="1068" alt="image" src="https://github.com/user-attachments/assets/a753008d-fa20-440a-8085-ba8795030ce4" />
+
 
 7. **Testing & Label Generation:**
 
@@ -59,16 +60,6 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 ## Notebook Link
 
 * **Model Training Notebook:** `Training.ipynb in this folder`
-
----
-
-## Results
-
-* **Metrics and Graphs :**
-
-  * Training/Validation loss curves
-  * mAP scores per class
-  * Confusion matrix
 
 ---
 
