@@ -77,10 +77,16 @@ mAP50	0.85
 mAP50-95	0.79
 Precision	0.91
 Recall	0.82
+"
+![67030475-7091fb80-f14a-11e9-8eeb-e71a8f3b4ee2](https://github.com/user-attachments/assets/006d7b86-9e8b-446d-a45e-bb030c6027dd)
+
 
 <img width="591" height="421" alt="2" src="https://github.com/user-attachments/assets/86fbf44d-9be1-409c-81de-843a49b3b475" />
 
 ---
+Video Demonstration using ByteTrack
+![car_vid](https://github.com/user-attachments/assets/f084ea1a-aea3-4831-b0eb-657c7d4a8e44)
+
 
 📝 Documentation
 
