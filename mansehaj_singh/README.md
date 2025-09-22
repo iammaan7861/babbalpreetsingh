@@ -78,6 +78,7 @@ mAP50-95	X.XX
 Precision	X.XX
 Recall	X.XX
 
+![Model tracking demo]("C:\Users\Asus\OneDrive\Desktop\Labeller_Project\car_vid.gif")
 ---
 
 📝 Documentation
