@@ -1,8 +1,1 @@
-streamlit
-supervision
-ultralytics
-opencv-python-headless
-huggingface-hub
-# Specify CPU-only torch and torchvision for a smaller installation
-torch --index-url https://download.pytorch.org/whl/cpu
-torchvision --index-url https://download.pytorch.org/whl/cpu
+wheel==0.45.1
