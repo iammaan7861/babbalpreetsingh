@@ -8,9 +8,9 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 ## Dataset
 
-* **Trained/Labelled Data**: `https://drive.google.com/drive/folders/1hD3CxS2ITz-XBsL0XAHGXP63A0F8LEbG?usp=sharing`
-* **Validation Data**: `https://drive.google.com/drive/folders/1kTk3l1HNjWy_O6wPEW6WYrYvLv6lTgq3?usp=sharing`
-* **Testing Unlabelled Data**: `https://drive.google.com/drive/folders/1rXHWN2rihxO9EzSxzn4PvLy-S8sgfDVm?usp=sharing`
+* **Trained/Labelled Data**: [Google Drive Link](https://drive.google.com/drive/folders/1hD3CxS2ITz-XBsL0XAHGXP63A0F8LEbG?usp=sharing)
+* **Validation Data**: [Google Drive Link](https://drive.google.com/drive/folders/1kTk3l1HNjWy_O6wPEW6WYrYvLv6lTgq3?usp=sharing)
+* **Testing Unlabelled Data**: [Google Drive Link](https://drive.google.com/drive/folders/1rXHWN2rihxO9EzSxzn4PvLy-S8sgfDVm?usp=sharing)
 
 > **Note:** Images were manually annotated using Labellerr.
 
