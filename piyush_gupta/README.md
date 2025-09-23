@@ -8,17 +8,16 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 ## Dataset
 
-* **Trained/Labelled Data**: [Google Drive Link](https://drive.google.com/drive/folders/1hD3CxS2ITz-XBsL0XAHGXP63A0F8LEbG?usp=sharing)
-* **Validation Data**: [Google Drive Link](https://drive.google.com/drive/folders/1kTk3l1HNjWy_O6wPEW6WYrYvLv6lTgq3?usp=sharing)
+* **Trained Data And Validation Dataset**: [Google Drive Link](https://drive.google.com/drive/folders/18sliMofl84HGbs84Xl-faBHWp_f6nTyp?usp=sharing)
 * **Testing Unlabelled Data**: [Google Drive Link](https://drive.google.com/drive/folders/1rXHWN2rihxO9EzSxzn4PvLy-S8sgfDVm?usp=sharing)
 
 > **Note:** Images were manually annotated using Labellerr.
 
 ---
 
-## Video Demonstration
+## Demo Link
 
-* **Project Demo Video Link:** `[PLACEHOLDER: Link to video demo]`
+* **Project Demo Video Link:** [Google Drive Link](https://drive.google.com/file/d/1rI1B5Jty-O1Aq44o6N-lVJSYkeeM3C8S/view?usp=sharing)
 
 ---
 
@@ -26,7 +25,7 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 1. **Data Collection:**
 
-   * Downloaded **114 raw images** containing pedestrians, vehicles, roads, and two-wheelers.
+   * Downloaded **150 raw images** containing pedestrians, vehicles, roads, and two-wheelers.
 
 2. **Manual Labeling:**
 
@@ -49,7 +48,6 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
    * **Curve And Confusion Matrix**
      <img width="1544" height="1068" alt="image" src="https://github.com/user-attachments/assets/a753008d-fa20-440a-8085-ba8795030ce4" />
 
-
 7. **Testing & Label Generation:**
 
    * Generated predictions for **20 test images** using `model.predict`.
@@ -59,14 +57,7 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 ## Notebook Link
 
-* **Model Training Notebook:** `Training.ipynb in this folder`
-
----
-
-## Demo & Project Links
-
-* **Demo Link:** `[PLACEHOLDER: Demo link]`
-* **Project GitHub Link:** `[PLACEHOLDER: GitHub repository link]`
+* **Model Training Notebook:** `This notebook contains the complete workflow for model training, including data preprocessing, training, validation, and evaluation steps.  `
 
 ---
 
