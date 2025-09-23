@@ -1,108 +1,205 @@
 # streamlit_app.py
+# Vehicle and Pedestrian Tracking with IDs + Counts (Streamlit)
 import streamlit as st
-from pathlib import Path
-import tempfile
-import shutil
-import time
-import os
+import tempfile, os, shutil, time, math
+from collections import deque
 
-# Import your tracker class and helpers
-from object_tracking import ObjectTracking
-from supervision import get_video_frames_generator, VideoInfo, VideoSink
+st.set_page_config("Vehicle and Pedestrian Tracking", layout="wide")
+st.title("🚦 Vehicle and Pedestrian Tracking")
 
-st.set_page_config(page_title="Vehicle Tracker", layout="wide")
+max_upload_mb = st.sidebar.number_input("Max upload size (MB)", min_value=5, max_value=300, value=80)
+model_choice = st.sidebar.selectbox("Model (auto-download if needed)", ["yolov8n.pt"], index=0)
+distance_threshold = st.sidebar.slider("Matching distance threshold (px)", 20, 200, 75)
 
-st.title("Vehicle Tracking (YOLOv8 + ByteTrack)")
-st.markdown("Upload a video and get a tracked output video. Uses your project's `ObjectTracking` class.")
+uploaded = st.file_uploader("Upload a video (mp4/avi/mov)", type=["mp4", "avi", "mov"])
+if uploaded is None:
+    st.info("Upload a video to start.")
+    st.stop()
 
-# Sidebar options
-st.sidebar.header("Options")
-model_choice = st.sidebar.selectbox("Model to use (local path or 'auto')",
-                                    options=["yolo/yolov8x.pt", "yolov8n.pt", "auto"])
-show_logs = st.sidebar.checkbox("Show processing logs", value=True)
+if uploaded.size > max_upload_mb * 1024 * 1024:
+    st.error(f"Upload too large ({uploaded.size/1e6:.1f} MB). Limit = {max_upload_mb} MB.")
+    st.stop()
 
-# Upload widget
-uploaded_file = st.file_uploader("Upload video (mp4 / avi)", type=["mp4", "avi", "mov"], accept_multiple_files=False)
+tmpdir = tempfile.mkdtemp()
+inpath = os.path.join(tmpdir, uploaded.name)
+with open(inpath, "wb") as f:
+    f.write(uploaded.getbuffer())
+outname = f"tracked_{uploaded.name}"
+outpath = os.path.join(tmpdir, outname)
 
-# Output area
-output_video_file = None
+if st.button("Start tracking"):
+    st.info("Processing video — this may take some time.")
+    t0 = time.time()
 
-def run_tracking(input_path: str, output_path: str):
-    """Run tracking and return path to output_path (synchronous)."""
-    # Create tracker instance - it will load the model (may download or require local file)
-    # If user selected 'auto', use 'yolov8n.pt' which Ultralytics will auto-download
-    model_path = model_choice if model_choice != "auto" else "yolov8n.pt"
-    # The ObjectTracking class currently loads YOLO inside its __init__ (using fixed path).
-    # We will temporarily override by setting environment or editing ObjectTracking if needed.
-    # Here we assume ObjectTracking initialises YOLO from "yolo/yolov8x.pt" by default.
-    # If you want to let user select model, modify object_tracking.py to accept model path.
-    # For now we proceed with ObjectTracking as-is.
-    obj = ObjectTracking(input_path, output_path)
+    # Lazy imports so deploy can start even if heavy libs missing
+    try:
+        from ultralytics import YOLO
+        import cv2
+        import numpy as np
+        torch_available = True
+    except Exception as e:
+        st.error("Missing ultralytics / opencv. Run locally with those packages installed for full tracking.")
+        shutil.copy(inpath, outpath)
+        st.video(outpath)
+        st.stop()
 
-    # Use generator and VideoSink similar to ObjectTracking.process() to allow progress bar
-    video_info = VideoInfo.from_video_path(input_path)
-    total_frames = video_info.total_frames if hasattr(video_info, "total_frames") else None
+    # Load model (yolov8n small model)
+    model = YOLO(model_choice)
 
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    # COCO indices: person=0, car=2, motorcycle=3, bus=5, truck=7, bicycle=1
+    VEHICLE_CLASSES = {2, 3, 5, 7, 1}   # include bicycle optionally
+    PEDESTRIAN_CLASSES = {0}
 
-    with VideoSink(target_path=output_path, video_info=video_info) as sink:
-        for idx, frame in enumerate(get_video_frames_generator(source_path=input_path)):
-            result_frame = obj.callback(frame, idx)
-            sink.write_frame(frame=result_frame)
+    # Video IO
+    cap = cv2.VideoCapture(inpath)
+    if not cap.isOpened():
+        st.error("Cannot open uploaded video.")
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        st.stop()
 
-            # update progress
-            if total_frames:
-                progress_bar.progress(min((idx + 1) / total_frames, 1.0))
-                status_text.text(f"Processing frame {idx+1}/{total_frames}")
-            else:
-                # fallback: increment progress slowly
-                progress_bar.progress(min((idx % 100) / 100, 0.99))
-                status_text.text(f"Processing frame {idx+1}")
+    fps = cap.get(cv2.CAP_PROP_FPS) or 20.0
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(outpath, fourcc, fps, (w, h))
 
-    progress_bar.progress(1.0)
-    status_text.text("Done processing.")
-    return output_path
+    # Simple centroid tracker with persistence
+    next_id = 0
+    tracks = {}            # id -> (cx, cy, missed_frames, cls)
+    max_missed = 8         # frames to keep a track without match
+    seen_vehicle_ids = set()
+    seen_ped_ids = set()
 
-if uploaded_file:
-    # Save upload to a temp file
-    tmp_dir = tempfile.mkdtemp()
-    input_path = os.path.join(tmp_dir, uploaded_file.name)
-    with open(input_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    st.info(f"Saved upload to {input_path}")
+    def centroid(box):
+        x1, y1, x2, y2 = box
+        return ((x1 + x2) / 2.0, (y1 + y2) / 2.0)
 
-    # Prepare output path
-    output_filename = f"tracked_{uploaded_file.name}"
-    output_path = os.path.join(tmp_dir, output_filename)
+    def dist(a, b):
+        return math.hypot(a[0]-b[0], a[1]-b[1])
 
-    if st.button("Start tracking"):
-        t0 = time.time()
-        with st.spinner("Running tracker — this may take some time."):
+    pbar = st.progress(0)
+    frame_i = 0
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Run model on frame
+        res = model(frame, verbose=False)[0]
+
+        # Extract boxes and classes safely (handles None)
+        boxes = []
+        classes = []
+        if getattr(res, "boxes", None) is not None and len(res.boxes) > 0:
             try:
-                out = run_tracking(input_path, output_path)
-            except Exception as e:
-                st.error(f"Tracking failed: {e}")
-                if show_logs:
-                    st.exception(e)
-                # cleanup
-                shutil.rmtree(tmp_dir, ignore_errors=True)
+                xyxy = res.boxes.xyxy.cpu().numpy()
+                clsids = res.boxes.cls.cpu().numpy().astype(int)
+            except Exception:
+                # fallback if CPU tensors not available
+                xyxy = np.array(res.boxes.xyxy).astype(float)
+                clsids = np.array(res.boxes.cls).astype(int)
+            for b, c in zip(xyxy, clsids):
+                boxes.append([float(b[0]), float(b[1]), float(b[2]), float(b[3])])
+                classes.append(int(c))
+
+        detections = []
+        for b, c in zip(boxes, classes):
+            if c in VEHICLE_CLASSES or c in PEDESTRIAN_CLASSES:
+                detections.append((b, c))
+
+        # Matching: greedy nearest-neighbor between existing tracks and detections
+        assigned = set()
+        new_tracks = {}
+        detection_centroids = [centroid(d[0]) for d in detections]
+
+        # First try to match existing tracks to detections
+        for tid, (tx, ty, missed, tcls) in list(tracks.items()):
+            best_idx = None
+            best_dist = float("inf")
+            for idx, (d_box, d_cls) in enumerate(detections):
+                if idx in assigned:
+                    continue
+                cx, cy = detection_centroids[idx]
+                d = dist((tx, ty), (cx, cy))
+                if d < best_dist:
+                    best_dist = d
+                    best_idx = idx
+            if best_idx is not None and best_dist <= distance_threshold:
+                # assign
+                dbox, dcls = detections[best_idx]
+                cx, cy = detection_centroids[best_idx]
+                new_tracks[tid] = (cx, cy, 0, dcls)   # reset missed
+                assigned.add(best_idx)
             else:
-                t1 = time.time()
-                st.success(f"Tracking finished in {int(t1-t0)}s — output: {out}")
+                # increase missed and keep if under threshold
+                if tracks[tid][2] + 1 <= max_missed:
+                    new_tracks[tid] = (tx, ty, tracks[tid][2] + 1, tcls)
 
-                # show result video player
-                st.video(out)
+        # Any unassigned detection -> new track
+        for idx, (d_box, d_cls) in enumerate(detections):
+            if idx in assigned:
+                continue
+            cx, cy = detection_centroids[idx]
+            tid = next_id
+            next_id += 1
+            new_tracks[tid] = (cx, cy, 0, d_cls)
+            # add to seen sets immediately
+            if d_cls in VEHICLE_CLASSES:
+                seen_vehicle_ids.add(tid)
+            elif d_cls in PEDESTRIAN_CLASSES:
+                seen_ped_ids.add(tid)
 
-                # Download button
-                with open(out, "rb") as f:
-                    video_bytes = f.read()
-                st.download_button("Download tracked video", data=video_bytes, file_name=output_filename, mime="video/mp4")
+        # Update tracks
+        tracks = new_tracks
 
-                # cleanup optional: keep tmp_dir for debugging, or remove:
-                # shutil.rmtree(tmp_dir, ignore_errors=True)
-else:
-    st.info("Please upload a video file to start.")
+        # Draw results (boxes + id + label)
+        for tid, (cx, cy, missed, tcls) in tracks.items():
+            # find the box corresponding to this track (closest detection)
+            # fallback: draw circle at centroid
+            label = "person" if tcls in PEDESTRIAN_CLASSES else "vehicle"
+            # find nearest detection box to track centroid
+            chosen_box = None
+            best_d = float("inf")
+            for b, c in detections:
+                if c != tcls:
+                    continue
+                bcent = centroid(b)
+                d = dist((cx, cy), bcent)
+                if d < best_d:
+                    best_d = d
+                    chosen_box = b
+            if chosen_box is not None and best_d < distance_threshold:
+                x1, y1, x2, y2 = map(int, chosen_box)
+                color = (0, 200, 0) if tcls in PEDESTRIAN_CLASSES else (0, 120, 255)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                text = f"{label} ID:{tid}"
+                cv2.putText(frame, text, (x1, max(15, y1-6)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            else:
+                # draw small circle + id
+                color = (0,200,0) if tcls in PEDESTRIAN_CLASSES else (0,120,255)
+                cv2.circle(frame, (int(cx), int(cy)), 6, color, -1)
+                cv2.putText(frame, f"{label} ID:{tid}", (int(cx)+8, int(cy)-8),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
-st.markdown("---")
-st.markdown("Notes: The model may be large (YOLOv8x). Consider using `yolov8n.pt` for testing. GPU speeds up processing a lot.")
+        writer.write(frame)
+        frame_i += 1
+        if total_frames:
+            pbar.progress(min(frame_i/total_frames, 1.0))
+
+    cap.release()
+    writer.release()
+
+    elapsed = int(time.time() - t0)
+    st.video(outpath)
+    st.success(f"Done — {len(seen_vehicle_ids)} vehicles, {len(seen_ped_ids)} pedestrians detected. Time: {elapsed}s")
+    st.metric("Total Vehicles (unique IDs)", len(seen_vehicle_ids))
+    st.metric("Total Pedestrians (unique IDs)", len(seen_ped_ids))
+
+    with open(outpath, "rb") as fh:
+        st.download_button("Download tracked video", data=fh.read(), file_name=outname, mime="video/mp4")
+
+    # cleanup
+    shutil.rmtree(tmpdir, ignore_errors=True)
