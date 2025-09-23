@@ -65,3 +65,7 @@ Run the main.py
 ```bash
 python3 main.py
 ```
+<<<<<<< HEAD
+=======
+
+>>>>>>> 47ca10c4a767c625e3df0aaa332221ea77011303
