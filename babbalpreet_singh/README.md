@@ -1,5 +1,5 @@
 # Vehicle Tracking and Counting with YOLOv8 and ByteTrack
-Live demo link - https://vehicle-pedestrian-tracking.streamlit.app/`
+Live demo link -  (https://vehicle-pedestrain-track.streamlit.app/)
 This project demonstrates vehicle tracking and counting using YOLOv8 and ByteTrack. The combined approach offers high accuracy and robustness in real-time vehicle detection, tracking, and counting tasks.
 
 ## Table of Contents
