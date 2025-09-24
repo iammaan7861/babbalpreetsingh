@@ -15,9 +15,10 @@ This project focuses on **image segmentation** using a YOLO-based model. The wor
 
 ---
 
-## Demo Link
+## Links
 
-* **Project Demo Video Link:** [Google Drive Link](https://drive.google.com/file/d/1rI1B5Jty-O1Aq44o6N-lVJSYkeeM3C8S/view?usp=sharing)
+* **Live Deployed Project Link:** [Render Link](https://motiondetectapp.onrender.com) 
+* **Video Demo Link:** [Google Drive Link](https://drive.google.com/file/d/1rI1B5Jty-O1Aq44o6N-lVJSYkeeM3C8S/view?usp=sharing)
 
 ---
 
