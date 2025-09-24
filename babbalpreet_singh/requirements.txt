@@ -1,15 +1,17 @@
-streamlit==1.27.2
-numpy==1.26.4
-pandas==2.2.2
-matplotlib==3.8.4
+# Core
+streamlit
+numpy
+pandas
+matplotlib
+pillow
 
 # OpenCV (headless for servers)
-opencv-python-headless==4.9.0.80
+opencv-python-headless
 
-# Deep learning stack
-torch==2.2.2
-torchvision==0.17.2
+# Deep learning stack (let ultralytics install the right versions)
+torch
+torchvision
 
 # YOLO + helpers
-ultralytics==8.1.47
-supervision==0.19.0
+ultralytics
+supervision
